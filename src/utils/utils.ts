@@ -1,3 +1,5 @@
+import { getCachedRegex } from "better-tailwindcss:utils/regex.js";
+
 import type { MessageStyleOption } from "better-tailwindcss:options/schemas/common.js";
 import type { BracesMeta, Literal, QuoteMeta } from "better-tailwindcss:types/ast.js";
 import type { Warning } from "better-tailwindcss:types/async.js";
@@ -141,27 +143,10 @@ export function getExactClassLocation(literal: Literal, startIndex: number, endI
   };
 }
 
-const REGEX_CACHE = new Map<string, RegExp>();
-const MAX_CACHE_SIZE = 500;
-
 export function matchesName(pattern: string, name: string | undefined): boolean {
   if(!name){ return false; }
 
-  const anchored = pattern.startsWith("^") && pattern.endsWith("$")
-    ? pattern
-    : `^${pattern}$`;
-
-  let regex = REGEX_CACHE.get(anchored);
-
-  if(!regex){
-    if(REGEX_CACHE.size >= MAX_CACHE_SIZE){
-      const firstKey = REGEX_CACHE.keys().next().value;
-      if(firstKey !== undefined){REGEX_CACHE.delete(firstKey);}
-    }
-    regex = new RegExp(anchored);
-    REGEX_CACHE.set(anchored, regex);
-  }
-
+  const regex = getCachedRegex(pattern);
   return regex.test(name);
 }
 
